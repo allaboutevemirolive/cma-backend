@@ -1,0 +1,10 @@
+# backend/requirements.txt
+
+Django>=4.0,<5.0
+djangorestframework>=3.14,<3.15
+psycopg2-binary>=2.9,<3.0  # For PostgreSQL connection
+python-dotenv>=1.0,<2.0    # To read .env file
+dj-database-url>=1.0,<2.0  # Add this line for parsing DATABASE_URL
+django-filter>=23.0,<24.0  # For filtering
+drf-yasg>=1.21,<1.22       # For OpenAPI/Swagger docs
+gunicorn>=20.0,<21.0       # WSGI server for production (optional for dev)

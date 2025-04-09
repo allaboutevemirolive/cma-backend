@@ -1,0 +1,36 @@
+# docker-compose.yml
+services:
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: course_db        # Must match .env DATABASE_URL
+      POSTGRES_USER: course_user    # Must match .env DATABASE_URL
+      POSTGRES_PASSWORD: course_password # Must match .env DATABASE_URL
+    ports:
+      # Use host port 5434 instead of 5433 to avoid conflict with local postgresql
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U course_user -d course_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app # Mount host code directory into container for development
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env # Load environment variables from .env file
+    depends_on:
+      db:
+        condition: service_healthy # Wait for db to be ready
+
+volumes:
+  postgres_data: # Define persistent volume for database data
