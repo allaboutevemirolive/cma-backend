@@ -31,3 +31,20 @@ docker-compose exec web python manage.py createsuperuser
 Go to `http://localhost:8000/admin/` in your browser
 
 Log in with the superuser credentials.
+
+
+---
+
+```sh
+$ docker-compose exec web python manage.py createsuperuser
+Username (leave blank to use 'root'): admin
+Email address: admin@example.com
+Password:
+Password (again):
+This password is too common.
+This password is entirely numeric.
+Bypass password validation and create user anyway? [y/N]: y
+Superuser created successfully.
+```
+
+Our password is: 1234567890
