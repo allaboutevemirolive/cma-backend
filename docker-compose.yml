@@ -1,76 +1,48 @@
 # docker-compose.yml
-# Defines the multi-container application setup for Docker Compose.
-# Includes the Django web application service and the PostgreSQL database service.
 
 services:
-  # --- PostgreSQL Database Service ---
   db:
-    image: postgres:14-alpine # Use the official PostgreSQL image (version 14, Alpine variant for smaller size).
-    container_name: cma_db # Optional: Assign a specific name to the container for easier identification.
+    image: postgres:14-alpine
+    container_name: cma_db
     volumes:
-      # Mount a named volume 'postgres_data' to persist database data across container restarts.
-      # The data will be stored in '/var/lib/postgresql/data/' inside the container.
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      # Environment variables needed by the PostgreSQL image to initialize the database.
-      # These MUST match the credentials used in the DATABASE_URL in your .env file.
-      POSTGRES_DB: ${POSTGRES_DB:-course_db}             # Database name (uses env var or default)
-      POSTGRES_USER: ${POSTGRES_USER:-course_user}       # Database user (uses env var or default)
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-course_password} # Database password (uses env var or default)
+      POSTGRES_DB: ${POSTGRES_DB:-course_db}
+      POSTGRES_USER: ${POSTGRES_USER:-course_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-course_password}
     ports:
-      # Map port 5434 on the host machine to port 5432 inside the container.
-      # We use 5434 on the host to avoid potential conflicts if PostgreSQL is running locally on 5432 or 5433.
-      - "5434:5432"
+      - "5434:5432" # Keeping host port 5434
     healthcheck:
-      # Defines a command to check if the database service is healthy and ready.
-      # The 'web' service will wait for this healthcheck to pass before starting.
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-course_user} -d ${POSTGRES_DB:-course_db}"]
-      interval: 10s   # How often to run the check.
-      timeout: 5s     # How long to wait for the check to return.
-      retries: 5      # Number of times to retry if the check fails.
-      start_period: 10s # Allow some time for the container to initialize before starting health checks.
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  # --- Django Web Application Service ---
   web:
-    # Build the Docker image for the web service using the Dockerfile in the current directory.
     build:
-      context: . # The build context is the current directory (where docker-compose.yml is located).
-      dockerfile: Dockerfile # Specifies the name of the Dockerfile to use.
-    container_name: cma_web # Optional: Assign a specific name to the web container.
-    # The command to run when the container starts. Overrides the CMD in the Dockerfile.
-    # Runs the Django development server, accessible from any IP address within the Docker network.
+      context: .
+      dockerfile: Dockerfile
+    container_name: cma_web
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      # Mount the 'backend' directory from the host into '/app' inside the container.
-      # This allows for live code reloading during development without rebuilding the image.
-      - ./backend:/app
-      # Mount the 'media' directory from the host into '/app/media' inside the container.
-      # This persists user-uploaded files (like course images) and makes them accessible.
-      - ./backend/media:/app/media
+      # Mount host 'src/' directory to container '/app'
+      - ./src:/app
+      # Mount host 'media/' directory to container '/app/media' (where MEDIA_ROOT points inside container)
+      - ./media:/app/media
+      # Optional: Mount collected static files if needed for dev (usually served directly in prod)
+      # - ./staticfiles:/app/staticfiles
     ports:
-      # Map port 8000 on the host machine to port 8000 inside the container,
-      # where the Django development server is running.
       - "8000:8000"
     env_file:
-      # Load environment variables from the specified .env file located in the 'backend' directory.
-      # This includes SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASE_URL, etc.
-      - ./backend/.env
+      # Load .env from project root
+      - .env
     depends_on:
-      # Specify that the 'web' service depends on the 'db' service.
       db:
-        # The 'web' service will only start after the 'db' service's healthcheck reports 'healthy'.
         condition: service_healthy
 
-# --- Named Volumes ---
-# Define named volumes used by the services. These are managed by Docker.
 volumes:
-  # Volume to persist PostgreSQL database data.
   postgres_data:
-    driver: local # Use the default local driver.
+    driver: local
 
-# --- Optional: Network Configuration ---
-# By default, Compose sets up a single network for your app.
-# You can define custom networks if needed.
-# networks:
-#   default:
-#     driver: bridge
+

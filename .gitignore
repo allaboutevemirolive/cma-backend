@@ -1,10 +1,19 @@
-# .gitignore
+# cma-backend/.gitignore
+# Specifies intentionally untracked files that Git should ignore.
 
-# Python
+# Environment Variables
+# Typically contains sensitive credentials, should NOT be in version control.
+.env*
+# It's common practice to commit an example file without sensitive data.
+!/.env.example
+
+# Python bytecode and caches
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -25,37 +34,88 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Environments
-.env
-.venv
-env/
+# PyInstaller
+# Usually dist/ and build/ are covered by the general sections above,
+# but be explicit if you use PyInstaller.
+# *.manifest
+# *.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+pytestdebug.log
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff
+*.log
+local_settings.py # For local overrides not suitable for commit
+db.sqlite3      # Default SQLite database (if used as fallback)
+db.sqlite3-*    # SQLite journal files
+
+# Media files
+# User-uploaded files - often large, change frequently, or sensitive.
+media/
+
+# Static files
+# Directory where `collectstatic` gathers files for deployment. Usually generated.
+staticfiles/
+
+# Logs Directory (if you configure file logging)
+logs/
+
+# Test Assets (Optional - ignore if you don't want test input files in git)
+# test_assets/
+
+# Docker
+.dockerignore # Sometimes used to exclude files from Docker build context
+docker-compose.override.yml # Common for local overrides to docker-compose.yml
+
+# Instance directory (if using Flask patterns, although this is Django)
+# instance/
+
+# Sass / Scss cache
+.sass-cache/
+*.css.map # Source maps, often large and generated
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE / Editor specific files
+.idea/ # JetBrains IDEs (PyCharm, etc.)
+.vscode/ # Visual Studio Code
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+*~ # Backup files
+*.sw[op] # Vim swap files
+
+# Virtual environments
+.venv/
 venv/
+env/
 ENV/
 env.bak/
 venv.bak/
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media/ # Often sensitive or large user-uploaded files
-static/ # Collected static files (usually generated)
-
-# Docker
-.dockerignore
-docker-compose.override.yml
-
-# IDE / OS Files
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*~
-.DS_Store
-Thumbs.db
-
-backend/media/
