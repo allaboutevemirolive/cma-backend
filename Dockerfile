@@ -10,22 +10,24 @@ ENV PYTHONUNBUFFERED 1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies (if needed, e.g., for postgres client)
+# Install system dependencies (if needed)
 # RUN apt-get update && apt-get install -y --no-install-recommends \
 #     build-essential libpq-dev \
 #  && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
-COPY backend/requirements.txt /app/
+# Copy requirements from project root
+COPY requirements.txt /app/
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r /app/requirements.txt
 
-# Copy project code
-COPY ./backend /app/
+# Copy project source code from src/ directory on host to /app/ in container
+COPY ./src /app/
 
-# Expose port (same as in docker-compose.yml and runserver default)
+# Expose port
 EXPOSE 8000
 
-# Default command to run when container starts (for development)
-# For production, you'd typically use Gunicorn here
+# Default command (for development) - runs manage.py from /app/
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# For production use Gunicorn:
+# CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
