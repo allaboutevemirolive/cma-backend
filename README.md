@@ -1,11 +1,17 @@
 # course-management-app-backend
-Full-Stack Developer Technical Assessment Backend
 
 ## Run Docker Compose
 
 ```sh
-docker-compose down
-docker-compose up --build
+docker-compose down # Stop existing containers
+docker-compose build --no-cache web # Rebuild 'web' service without cache
+docker-compose up -d # Start services in detached mode
+```
+
+## Check Logs
+
+```sh
+docker-compose logs -f web
 ```
 
 ## Run Migrations (in a separate terminal)
@@ -16,24 +22,28 @@ docker-compose exec web python manage.py makemigrations courses
 docker-compose exec web python manage.py migrate
 ```
 
+## Run Test
+
+```sh
+docker-compose exec web python manage.py test apps.courses
+```
+
 ## Explore the API Documentation (Swagger)
 
 Open your web browser and navigate to: `http://localhost:8000/swagger/`
 
 
-## Check Django Admin
+## Initalize Django Admin
 
 ```bash
 docker-compose exec web python manage.py createsuperuser
 ```
-(Follow the prompts to create a username and password)
 
-Go to `http://localhost:8000/admin/` in your browser
+Example:
 
-Log in with the superuser credentials.
-
-
----
+- Username: admin
+- Email: admin@example.com
+- Password: 1234567890
 
 ```sh
 $ docker-compose exec web python manage.py createsuperuser
@@ -47,4 +57,9 @@ Bypass password validation and create user anyway? [y/N]: y
 Superuser created successfully.
 ```
 
-Our password is: 1234567890
+Go to `http://localhost:8000/admin/` in your browser and log in with the superuser credentials.
+
+
+## Test the Role-Based Access Control (RBAC) using Swagger UI
+
+Refer to `cma-plan` repository.
