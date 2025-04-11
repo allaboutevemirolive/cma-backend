@@ -63,3 +63,9 @@ Go to `http://localhost:8000/admin/` in your browser and log in with the superus
 ## Test the Role-Based Access Control (RBAC) using Swagger UI
 
 Refer to `cma-plan` repository.
+
+## Test API endpoints
+
+- Use Swagger
+- Use dedicated API testing software like Postman and Yakk
+- Send `curl` request (Refer to `cma-plan` repository)
