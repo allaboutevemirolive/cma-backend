@@ -1,8 +1,9 @@
-# backend/courses/models.py
+# src/apps/courses/models.py
 
 from django.db import models
 from django.utils import timezone
-from django.conf import settings # Optional: To potentially link instructor_id to settings.AUTH_USER_MODEL
+from django.conf import settings # To link instructor to settings.AUTH_USER_MODEL
+# from django.core.validators import MinValueValidator # Optional: For price validation
 
 # --- Custom Manager for Soft Delete ---
 class CourseManager(models.Manager):
@@ -36,7 +37,7 @@ class CourseManager(models.Manager):
 # --- Course Model ---
 class Course(models.Model):
     """
-    Represents a course offered on the platform.
+    Represents a course offered on the learning platform.
     Includes fields for title, description, price, instructor, status,
     and an optional image. Implements soft deletion.
     """
@@ -44,7 +45,7 @@ class Course(models.Model):
         """Enum-like choices for the course status."""
         ACTIVE = 'active', 'Active'
         INACTIVE = 'inactive', 'Inactive'
-        # Add more statuses if needed, e.g., DRAFT, ARCHIVED
+        DRAFT = 'draft', 'Draft' # Added Draft status
 
     # --- Core Fields ---
     title = models.CharField(
@@ -63,29 +64,25 @@ class Course(models.Model):
         decimal_places=2,   # Number of decimal places to store
         blank=False,        # Price is required
         null=False,
-        help_text="The price of the course."
-        # Consider adding validators, e.g., MinValueValidator(0)
+        help_text="The price of the course.",
+        # validators=[MinValueValidator(0.00)] # Optional: Ensure price is not negative
     )
-    # Consider using ForeignKey for a more robust relationship
-    # instructor = models.ForeignKey(
-    #     settings.AUTH_USER_MODEL,
-    #     on_delete=models.SET_NULL, # Or models.PROTECT, depending on desired behavior
-    #     null=True, # Allow courses without an assigned instructor initially?
-    #     blank=True,
-    #     related_name='courses_taught',
-    #     limit_choices_to={'groups__name': 'Instructors'}, # Optionally limit choices in admin/forms
-    #     help_text="The user designated as the instructor for this course."
-    # )
-    instructor_id = models.IntegerField( # Kept as IntegerField as per original requirement for simplicity
-        blank=False,
-        null=False,
-        help_text="ID of the user instructing the course. Consider using a ForeignKey to the User model."
+    # --- Instructor ForeignKey ---
+    instructor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL, # Or PROTECT if instructor must exist
+        null=True,                 # Allow null temporarily or if instructor deleted
+        blank=False,               # Instructor is logically required, but allow null in DB via SET_NULL
+        related_name='courses_taught', # Access courses from user: user.courses_taught.all()
+        help_text="The user designated as the instructor for this course."
+        # Optional: Limit choices in admin/forms
+        # limit_choices_to={'profile__role': 'instructor'} # Assumes Profile model exists
     )
     status = models.CharField(
         max_length=10,
         choices=Status.choices,
-        default=Status.ACTIVE, # Default status when a course is created
-        help_text="The current status of the course (e.g., Active, Inactive)."
+        default=Status.DRAFT, # Default to Draft status
+        help_text="The current status of the course (e.g., Draft, Active, Inactive)."
     )
     image = models.ImageField(
         upload_to='course_images/', # Files will be saved to MEDIA_ROOT/course_images/
@@ -97,6 +94,7 @@ class Course(models.Model):
     # --- Soft Delete Fields ---
     is_deleted = models.BooleanField(
         default=False,
+        db_index=True, # Index for faster filtering of non-deleted items
         help_text="Flag indicating if the course has been soft-deleted."
     )
     deleted_at = models.DateTimeField(
@@ -108,10 +106,12 @@ class Course(models.Model):
     # --- Timestamps ---
     created_at = models.DateTimeField(
         auto_now_add=True, # Automatically set when the object is first created
+        editable=False,    # Prevent editing in forms/admin
         help_text="Timestamp when the course was created."
     )
     updated_at = models.DateTimeField(
         auto_now=True,     # Automatically set every time the object is saved
+        editable=False,    # Prevent editing in forms/admin
         help_text="Timestamp when the course was last updated."
     )
 
@@ -126,30 +126,31 @@ class Course(models.Model):
         ordering = ['-created_at'] # Default ordering for querysets (newest first)
         verbose_name = "Course"        # Singular name used in Django admin
         verbose_name_plural = "Courses"  # Plural name used in Django admin
-        # indexes = [ # Optional: Add database indexes for frequently queried fields
-        #     models.Index(fields=['status']),
-        #     models.Index(fields=['instructor_id']),
-        #     models.Index(fields=['is_deleted']),
-        # ]
+        indexes = [ # Optional but good: Add database indexes for frequently queried fields
+            models.Index(fields=['status']),
+            models.Index(fields=['instructor']),
+            models.Index(fields=['is_deleted', 'deleted_at']), # Composite index for soft delete
+        ]
 
     # --- Instance Methods ---
     def __str__(self):
         """String representation of the Course model, used in admin and debugging."""
-        return self.title
+        instructor_name = self.instructor.username if self.instructor else "No Instructor Assigned"
+        return f"{self.title} (by {instructor_name})"
 
     def soft_delete(self):
         """Marks the instance as deleted by setting the flag and timestamp."""
         if not self.is_deleted: # Prevent multiple updates if already deleted
             self.is_deleted = True
             self.deleted_at = timezone.now()
-            self.save() # Use save() to trigger signals if any are attached
+            self.save(update_fields=['is_deleted', 'deleted_at', 'updated_at']) # Optimize save
 
     def restore(self):
         """Restores a soft-deleted instance by unsetting the flag and timestamp."""
         if self.is_deleted: # Only restore if currently deleted
             self.is_deleted = False
             self.deleted_at = None
-            self.save() # Use save() to trigger signals
+            self.save(update_fields=['is_deleted', 'deleted_at', 'updated_at']) # Optimize save
 
     # Override the default delete() method to enforce soft delete
     def delete(self, using=None, keep_parents=False):
@@ -161,11 +162,11 @@ class Course(models.Model):
         # Note: We don't call super().delete() here, as that would perform a hard delete.
 
     # You might add other model methods here, e.g.:
-    # def is_active(self):
+    # def is_active_for_enrollment(self):
+    #    """Checks if the course is active and not deleted."""
     #    return self.status == self.Status.ACTIVE and not self.is_deleted
 
-    # def get_instructor_name(self):
-    #     # Example if using ForeignKey for instructor
-    #     if self.instructor:
-    #         return self.instructor.get_full_name() or self.instructor.username
-    #     return "N/A"
+    # def get_enrollment_count(self):
+    #    """Returns the number of active enrollments."""
+    #    # Assumes Enrollment model has a related_name='enrollments' on course FK
+    #    return self.enrollments.filter(status='active', is_deleted=False).count()

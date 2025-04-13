@@ -1,118 +1,117 @@
-# backend/courses/views.py
+# src/apps/courses/views.py
 
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, permissions
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action # Optional: for custom actions like restore
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Course
 from .serializers import CourseSerializer
-from .permissions import IsAdminOrInstructor # Custom permission for RBAC
+from .permissions import IsAdminOrInstructor
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows courses to be viewed, created, updated, or deleted.
 
     **Permissions:**
-    *   List/Retrieve (GET): Any authenticated user.
-    *   Create/Update/Delete (POST, PUT, PATCH, DELETE): Admin users or users in the 'Instructors' group only.
+    - List/Retrieve (GET): Any authenticated user.
+    - Create/Update/Partial Update/Destroy: Admin users or users with the 'Instructor' role only.
+    - Restore/Deleted List: Admin users or users with the 'Instructor' role only.
 
     **Filtering:**
     Supports filtering by `status` and `instructor_id`.
-    Example: `/api/courses/?status=active&instructor_id=1`
 
     **Searching:**
-    Supports searching across `title` and `description` fields.
-    Example: `/api/courses/?search=python`
+    Supports searching across `title`, `description`, and `instructor__username`.
 
     **Ordering:**
-    Supports ordering by `title`, `price`, `created_at`, `status`.
-    Example: `/api/courses/?ordering=-price` (descending price)
+    Supports ordering by `title`, `price`, `created_at`, `status`, `instructor__username`.
 
     **Deletion:**
-    Uses soft delete for DELETE requests. Deleted items are hidden by default.
+    Uses soft delete. Deleted items are hidden by default.
     """
-    # queryset = Course.objects.all() # Use get_queryset() for potential future user-based filtering
+
     serializer_class = CourseSerializer
 
-    # --- Filtering, Searching, Ordering ---
     filter_backends = [
-        DjangoFilterBackend,        # For field-based filtering
-        filters.SearchFilter,       # For ?search= parameter
-        filters.OrderingFilter      # For ?ordering= parameter
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
     ]
-    filterset_fields = ['status', 'instructor_id'] # Fields available for precise filtering
-    search_fields = ['title', 'description']       # Fields searched via ?search=
-    ordering_fields = ['title', 'price', 'created_at', 'status'] # Fields allowed for ordering
+    filterset_fields = ["status", "instructor_id"]
+    search_fields = ["title", "description", "instructor__username"]
+    ordering_fields = ["title", "price", "created_at", "status", "instructor__username"]
 
-    # --- Permissions ---
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires,
-        based on the action being performed.
-        """
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'restore', 'deleted_courses']:
-             # Write actions require Admin or Instructor role
-             # Default IsAuthenticated is already checked by global settings
-            permission_classes = [IsAdminOrInstructor]
-        else:
-             # Read actions (list, retrieve) only require authentication (handled globally)
-            permission_classes = [IsAuthenticated] # Explicitly state, though global setting covers this
-
-        # Note: We rely on the global DEFAULT_PERMISSION_CLASSES = [IsAuthenticated]
-        # to ensure the user is logged in *before* these more specific checks run.
-        # If the global default wasn't set, we'd need [IsAuthenticated, IsAdminOrInstructor]
-        # for the write actions.
-        return [permission() for permission in permission_classes]
-
-    # --- Queryset ---
     def get_queryset(self):
         """
-        Returns the queryset that should be used for list views.
-        Defaults to the Course model's default manager (non-deleted items).
-        Could be overridden later to filter based on the user (e.g., show only courses taught by instructor).
+        Returns queryset for non-deleted courses only.
         """
-        # Ensure only non-deleted items are shown by default list/detail views
-        return Course.objects.all() # Uses the default manager which excludes is_deleted=True
+        return Course.objects.all()
 
-    # --- Soft Delete ---
+    def get_permissions(self):
+        """
+        Returns permission classes depending on the action.
+        """
+        if self.action in [
+            "create",
+            "update",
+            "partial_update",
+            "destroy",
+            "restore",
+            "deleted_list",
+        ]:
+            permission_classes = [IsAdminOrInstructor]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
     def perform_destroy(self, instance):
         """
-        Overrides the default destroy action to perform a soft delete.
-        The actual logic is in the model's delete() method. This ensures
-        the instance's `soft_delete()` method is called.
+        Soft delete the course instead of hard delete.
         """
-        instance.soft_delete() # Calls the model method which sets flags and saves
+        instance.soft_delete()
 
-    # --- Optional: Custom Actions for Soft Delete Management ---
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[IsAdminOrInstructor],
+        url_path="restore",
+    )
+    def restore(self, request, pk=None):
+        """
+        Restore a soft-deleted course.
+        """
+        try:
+            course = Course.all_objects.get(pk=pk, is_deleted=True)
+            course.restore()
+            serializer = self.get_serializer(course)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Course.DoesNotExist:
+            return Response(
+                {"detail": "Soft-deleted course not found or already restored."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
-    # @action(detail=True, methods=['post'], permission_classes=[IsAdminOrInstructor]) # Ensure correct permissions
-    # def restore(self, request, pk=None):
-    #     """
-    #     Restores a soft-deleted course instance. Requires Admin/Instructor role.
-    #     """
-    #     try:
-    #         # Use all_objects manager to find the instance even if deleted
-    #         course = Course.all_objects.get(pk=pk, is_deleted=True)
-    #         course.restore()
-    #         serializer = self.get_serializer(course)
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     except Course.DoesNotExist:
-    #         return Response({'error': 'Soft-deleted course not found.'}, status=status.HTTP_404_NOT_FOUND)
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[IsAdminOrInstructor],
+        url_path="deleted",
+    )
+    def deleted_list(self, request):
+        """
+        List all soft-deleted courses.
+        """
+        deleted_courses = Course.all_objects.filter(is_deleted=True)
+        page = self.paginate_queryset(deleted_courses)
 
-    # @action(detail=False, methods=['get'], url_path='deleted', permission_classes=[IsAdminOrInstructor]) # Ensure correct permissions
-    # def deleted_courses(self, request):
-    #     """
-    #     Lists only the soft-deleted courses. Requires Admin/Instructor role.
-    #     """
-    #     deleted_courses = Course.all_objects.deleted_objects() # Use the specific manager method
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-    #     # Apply pagination from settings
-    #     page = self.paginate_queryset(deleted_courses)
-    #     if page is not None:
-    #         serializer = self.get_serializer(page, many=True)
-    #         return self.get_paginated_response(serializer.data)
-
-    #     serializer = self.get_serializer(deleted_courses, many=True)
-    #     return Response(serializer.data)
+        serializer = self.get_serializer(deleted_courses, many=True)
+        return Response(serializer.data)

@@ -10,10 +10,13 @@ ENV PYTHONUNBUFFERED 1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies (if needed)
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     build-essential libpq-dev \
-#  && rm -rf /var/lib/apt/lists/*
+# --- Install system dependencies ---
+# Added graphviz, dev packages, AND build tools (gcc, etc.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    graphviz libgraphviz-dev pkg-config \
+ && rm -rf /var/lib/apt/lists/*
+# ---------------------------------
 
 # Install dependencies
 # Copy requirements from project root

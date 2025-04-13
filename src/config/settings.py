@@ -28,15 +28,21 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     # Third-Party Apps
     "rest_framework",
     "rest_framework_simplejwt",
-    # 'rest_framework_simplejwt.token_blacklist',
     "django_filters",
     "drf_yasg",
     "corsheaders",
+    "django_extensions",  # <-- ADD THIS LINE
+
     # Your Project's Apps
     "apps.courses.apps.CoursesConfig",
+    "apps.profiles.apps.ProfilesConfig",
+    "apps.enrollments.apps.EnrollmentsConfig",
+    "apps.quizzes.apps.QuizzesConfig",
+    # "apps.users", # Add this if your users app has models/admin/commands
 ]
 
 # --- Middleware ---
