@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: cma_web
-    command: python manage.py runserver 0.0.0.0:8000 --nostatic
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       # Mount host 'src/' directory to container '/app'
       - ./src:/app
