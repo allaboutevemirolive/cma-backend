@@ -10,6 +10,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
+from apps.users.views import CurrentUserView
+
 # --- Simple JWT (Token Authentication) ---
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,  # View to get access/refresh tokens
@@ -57,6 +59,7 @@ urlpatterns = [
     # Serves the alternative ReDoc documentation browser.
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
+    path('api/users/me/', CurrentUserView.as_view(), name='current-user'),
 ]
 
 # --- Media File Serving (Development Only) ---
