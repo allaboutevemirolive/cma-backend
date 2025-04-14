@@ -45,8 +45,8 @@ class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):  # ReadOnly + Destroy
                 {"detail": "Cannot delete superuser."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # Perform standard delete (will cascade to profile due to model definition)
-        self.perform_destroy(instance)
+        # Perform standard delete directly on the model instance
+        instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     # Optional: Add custom actions if needed later

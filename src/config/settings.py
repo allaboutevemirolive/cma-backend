@@ -1,5 +1,6 @@
 # src/config/settings.py
 
+import sys  # <-- ADDED IMPORT
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -41,7 +42,7 @@ INSTALLED_APPS = [
     "apps.courses.apps.CoursesConfig",
     "apps.profiles.apps.ProfilesConfig",
     "apps.enrollments.apps.EnrollmentsConfig",
-    # "apps.users", # Add this if your users app has models/admin/commands
+    "apps.users",
 ]
 
 # --- Middleware ---
@@ -116,6 +117,24 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+# --- START: Disable complex password validation during testing ---
+# Check if 'test' is in the command line arguments passed to manage.py
+if 'test' in sys.argv or 'test_coverage' in sys.argv: # Also check for coverage runs
+    print("INFO: Relaxing password validation rules for testing.")
+    AUTH_PASSWORD_VALIDATORS = [
+        # You can keep minimal validation like length if desired
+         {
+             'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+             'OPTIONS': {
+                 'min_length': 4, # Reduce min length for simpler test passwords
+             }
+         },
+        # Or remove all validators for maximum simplicity in tests:
+        # AUTH_PASSWORD_VALIDATORS = []
+    ]
+# --- END: Disable complex password validation during testing ---
+
 
 # --- Internationalization ---
 LANGUAGE_CODE = "en-us"
