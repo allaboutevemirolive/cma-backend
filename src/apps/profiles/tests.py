@@ -1,6 +1,6 @@
 # src/apps/profiles/tests.py
 
-from django.test import TestCase
+# from django.test import TestCase
 
 # No API endpoint tests needed for Profiles in MVP.
 # Model tests could be added here if desired.

@@ -11,7 +11,6 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # --- Install system dependencies ---
-# Added graphviz, dev packages, AND build tools (gcc, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     graphviz libgraphviz-dev pkg-config \

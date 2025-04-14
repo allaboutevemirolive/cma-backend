@@ -4,11 +4,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 
-# Import specific permissions
 from .permissions import (
     IsAdminUser,
     IsInstructorUser,
-    IsCourseOwnerInstructor,
     IsCourseOwnerInstructorOrAdmin,
 )
 from .models import Course

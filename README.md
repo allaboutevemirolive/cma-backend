@@ -34,21 +34,18 @@ This is the backend service for the Course Management Application (MVP version),
     Create a `.env` file in the project root directory (where `docker-compose.yml` is located) with the following content (adjust values if needed, especially `SECRET_KEY` for production):
 
     ```dotenv
-    # .env
-    SECRET_KEY='django-insecure-replace-this-with-a-strong-secret-key-in-production!'
+    # backend/.env
+
+    # Django Settings
+    SECRET_KEY='django-insecure-=your-very-secret-key-replace-me!*&' # CHANGE THIS!
     DEBUG=True
     ALLOWED_HOSTS=localhost,127.0.0.1
 
-    # Database Credentials (used by docker-compose.yml)
-    POSTGRES_DB=course_db
-    POSTGRES_USER=course_user
-    POSTGRES_PASSWORD=course_password
-
-    # Database URL (used by Django settings via dj-database-url)
+    # Database Settings (for Docker Compose service named 'db')
     DATABASE_URL=postgres://course_user:course_password@db:5432/course_db
 
-    # Optional: Set DB_SSL_REQUIRE=True if your production DB requires SSL
-    # DB_SSL_REQUIRE=False
+    # Other Settings (if needed)
+    # EMAIL_HOST_USER=...
     ```
     **Important:** For production, set `DEBUG=False`, generate a strong `SECRET_KEY`, and list your actual domain(s) in `ALLOWED_HOSTS`.
 
@@ -273,3 +270,13 @@ docker-compose down
 # docker-compose stop
 ```
 
+
+## Clean Persistent
+
+```sh
+# Stop and remove containers and network
+docker-compose down
+
+# Remove the custom built image
+docker image rm cma-backend-web
+```

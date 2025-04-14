@@ -42,5 +42,3 @@ class IsCourseOwnerInstructorOrAdmin(permissions.BasePermission):
         return obj.instructor == request.user or request.user.is_staff
 
 
-# Note: You might combine these or use DRF's composition (e.g., IsAdminUser | IsInstructorUser)
-# but explicit classes can be clearer.

@@ -9,7 +9,7 @@ router.register(r'admin/users', AdminUserViewSet, basename='admin-user')
 
 urlpatterns = [
     path('register/', UserRegisterView.as_view(), name='user-register'),
-    path('users/me/', CurrentUserView.as_view(), name='current-user'), # Keep if used
+    path('users/me/', CurrentUserView.as_view(), name='current-user'),
     # Include router URLs for admin user management
     path('', include(router.urls)),
 ]

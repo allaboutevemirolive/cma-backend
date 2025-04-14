@@ -1,7 +1,6 @@
 # src/apps/profiles/models.py
 from django.db import models
 from django.conf import settings # To link to the AUTH_USER_MODEL
-from django.utils import timezone
 from django.db.models.signals import post_save # To automatically create profiles
 from django.dispatch import receiver          # To receive the signal
 
@@ -21,7 +20,6 @@ class Profile(models.Model):
         ACTIVE = 'active', 'Active'      # User can log in and interact
         INACTIVE = 'inactive', 'Inactive'  # User account is disabled by admin
         PENDING = 'pending', 'Pending'    # User needs to take action (e.g., email verification)
-        # Add other statuses if needed, e.g., SUSPENDED
 
     # --- Core Fields ---
     user = models.OneToOneField(
@@ -136,7 +134,6 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
             instance.profile.role = Profile.Role.ADMIN
             instance.profile.save()
             print(f"Role updated to ADMIN for staff user: {instance.username}")
-    # You might add logic here to sync role from Django Groups if you use them extensively
     # elif instance.groups.filter(name='Instructors').exists():
     #      if instance.profile.role != Profile.Role.INSTRUCTOR:
     #          instance.profile.role = Profile.Role.INSTRUCTOR

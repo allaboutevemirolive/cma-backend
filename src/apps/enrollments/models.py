@@ -2,7 +2,8 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from apps.courses.models import Course # Import Course
+from apps.courses.models import Course
+
 
 class EnrollmentManager(models.Manager):
     def get_queryset(self):
@@ -14,27 +15,26 @@ class EnrollmentManager(models.Manager):
     def deleted_only(self):
         return super().get_queryset().filter(is_deleted=True)
 
+
 class Enrollment(models.Model):
     class Status(models.TextChoices):
-        ACTIVE = 'active', 'Active'
-        COMPLETED = 'completed', 'Completed'
-        CANCELLED = 'cancelled', 'Cancelled'
+        ACTIVE = "active", "Active"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
 
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE, # If user deleted, remove enrollment
-        related_name='enrollments'
+        on_delete=models.CASCADE,  # If user deleted, remove enrollment
+        related_name="enrollments",
     )
     course = models.ForeignKey(
         Course,
-        on_delete=models.CASCADE, # If course deleted, remove enrollment
-        related_name='enrollments'
+        on_delete=models.CASCADE,  # If course deleted, remove enrollment
+        related_name="enrollments",
     )
     enrollment_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.ACTIVE
+        max_length=20, choices=Status.choices, default=Status.ACTIVE
     )
 
     # Timestamps
@@ -49,8 +49,12 @@ class Enrollment(models.Model):
     all_objects = models.Manager()
 
     class Meta:
-        unique_together = ('student', 'course', 'is_deleted') # Allow re-enrollment if soft-deleted
-        ordering = ['-enrollment_date']
+        unique_together = (
+            "student",
+            "course",
+            "is_deleted",
+        )  # Allow re-enrollment if soft-deleted
+        ordering = ["-enrollment_date"]
         verbose_name = "Enrollment"
         verbose_name_plural = "Enrollments"
 

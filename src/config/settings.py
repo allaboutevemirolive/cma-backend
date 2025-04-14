@@ -1,6 +1,6 @@
 # src/config/settings.py
 
-import sys  # <-- ADDED IMPORT
+import sys
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # Third-Party Apps
     "rest_framework",
     "rest_framework_simplejwt",
@@ -37,8 +36,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "django_extensions",
-
-    # Your Project's Apps
+    # Project's Apps
     "apps.courses.apps.CoursesConfig",
     "apps.profiles.apps.ProfilesConfig",
     "apps.enrollments.apps.EnrollmentsConfig",
@@ -120,16 +118,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # --- START: Disable complex password validation during testing ---
 # Check if 'test' is in the command line arguments passed to manage.py
-if 'test' in sys.argv or 'test_coverage' in sys.argv: # Also check for coverage runs
+if "test" in sys.argv or "test_coverage" in sys.argv:  # Also check for coverage runs
     print("INFO: Relaxing password validation rules for testing.")
     AUTH_PASSWORD_VALIDATORS = [
-        # You can keep minimal validation like length if desired
-         {
-             'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-             'OPTIONS': {
-                 'min_length': 4, # Reduce min length for simpler test passwords
-             }
-         },
+        {
+            "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+            "OPTIONS": {
+                "min_length": 4,  # Reduce min length for simpler test passwords
+            },
+        },
         # Or remove all validators for maximum simplicity in tests:
         # AUTH_PASSWORD_VALIDATORS = []
     ]
@@ -216,10 +213,9 @@ LOGOUT_URL = "/admin/logout/"
 
 # --- CORS Settings ---
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Allow your Vite frontend origin
-    "http://127.0.0.1:5173",  # Also allow this, just in case
-    "http://localhost:3000"
-    # Add any other frontend origins if needed (e.g., production domain)
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
 ]
 
 # Optional: Allow specific headers if needed (usually defaults are fine)

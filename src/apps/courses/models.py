@@ -161,7 +161,6 @@ class Course(models.Model):
         self.soft_delete()
         # Note: We don't call super().delete() here, as that would perform a hard delete.
 
-    # You might add other model methods here, e.g.:
     # def is_active_for_enrollment(self):
     #    """Checks if the course is active and not deleted."""
     #    return self.status == self.Status.ACTIVE and not self.is_deleted

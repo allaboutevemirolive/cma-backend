@@ -7,9 +7,6 @@ from rest_framework.exceptions import PermissionDenied
 
 from .models import Course
 
-# Assuming UserSerializer is correctly placed and defined
-# Adjust the import path if your UserSerializer is elsewhere
-# Ensure the users app and its serializers are correctly structured
 try:
     # Using a simple serializer for nested display is often sufficient
     # and avoids potential circular imports if UserSerializer also nests CourseSerializer
