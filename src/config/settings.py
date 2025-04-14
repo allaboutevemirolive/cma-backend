@@ -35,13 +35,12 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_yasg",
     "corsheaders",
-    "django_extensions",  # <-- ADD THIS LINE
+    "django_extensions",
 
     # Your Project's Apps
     "apps.courses.apps.CoursesConfig",
     "apps.profiles.apps.ProfilesConfig",
     "apps.enrollments.apps.EnrollmentsConfig",
-    "apps.quizzes.apps.QuizzesConfig",
     # "apps.users", # Add this if your users app has models/admin/commands
 ]
 

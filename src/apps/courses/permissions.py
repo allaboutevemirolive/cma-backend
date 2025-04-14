@@ -1,35 +1,46 @@
-# backend/courses/permissions.py
-
+# src/apps/courses/permissions.py
 from rest_framework import permissions
 
-class IsAdminOrInstructor(permissions.BasePermission):
-    """
-    Allows access only to admin users or users in the 'Instructors' group.
-    """
-    message = "You do not have permission to perform this action." # Custom message
+
+class IsAdminUser(permissions.BasePermission):
+    """Allows access only to admin users (is_staff)."""
 
     def has_permission(self, request, view):
-        # Check if user is authenticated first (should be handled by IsAuthenticated already)
-        if not request.user or not request.user.is_authenticated:
-            return False
+        return request.user and request.user.is_authenticated and request.user.is_staff
 
-        # Allow if user is staff (admin)
-        if request.user.is_staff:
-            return True
 
-        # Allow if user is in the 'Instructors' group
-        # Using exists() is efficient
-        return request.user.groups.filter(name='Instructors').exists()
+class IsInstructorUser(permissions.BasePermission):
+    """Allows access only to users with the 'instructor' role."""
 
-class IsAdminOrReadOnly(permissions.BasePermission):
-    """
-    Allows read-only access to any authenticated user, but only admin users for write operations.
-    Useful if only admins should modify certain things. Not used in the current CourseViewSet logic, but good example.
-    """
     def has_permission(self, request, view):
-        # Read permissions are allowed to any authenticated request
-        if request.method in permissions.SAFE_METHODS: # SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
-            return request.user and request.user.is_authenticated
+        # Check profile exists and role is instructor
+        return (
+            request.user
+            and request.user.is_authenticated
+            and hasattr(request.user, "profile")
+            and request.user.profile.role == "instructor"
+        )
 
-        # Write permissions are only allowed to admin users.
-        return request.user and request.user.is_staff
+
+class IsCourseOwnerInstructor(permissions.BasePermission):
+    """
+    Object-level permission to only allow the course's instructor to modify it.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        # Assumes obj is a Course instance
+        return obj.instructor == request.user
+
+
+class IsCourseOwnerInstructorOrAdmin(permissions.BasePermission):
+    """
+    Object-level permission allowing the course's instructor OR an admin.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        # Assumes obj is a Course instance
+        return obj.instructor == request.user or request.user.is_staff
+
+
+# Note: You might combine these or use DRF's composition (e.g., IsAdminUser | IsInstructorUser)
+# but explicit classes can be clearer.
