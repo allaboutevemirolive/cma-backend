@@ -141,7 +141,7 @@ Register new student with this information, then wait for response code `201`.
 
 ## Populate Database
 
-Run this script only after you create `instructor1`:
+Run this script at the root project, only after you create `instructor1`:
 
 ```sh
 pip install requests
