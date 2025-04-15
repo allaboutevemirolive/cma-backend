@@ -83,22 +83,113 @@ docker-compose exec web python manage.py makemigrations enrollments
 docker-compose exec web python manage.py migrate
 ```
 
-## Create Superuser (Admin Account)
+## Initial Setup Commands (After `docker-compose up -d`)
 
-Create an initial administrative user to access the Django admin interface and perform admin actions via the API.
+Once the containers are running, execute these commands in order from your project root in a separate terminal:
 
+1.  **Apply Database Migrations:**
+    ```bash
+    docker-compose exec web python manage.py migrate
+    ```
+
+2.  **Create Initial Users (Optional but Recommended):**
+    This script creates a default superuser, instructor, and student. It's idempotent (safe to run multiple times). Credentials can be configured via environment variables (see script comments).
+
+    By default we will have this credentials:
+    
+    ```txt
+    Username: admin
+    Email: admin@example.com
+    Password: aabc@123a
+
+    Username: instructro1
+    Email: instructor1@example.com
+    Password: aabc@123a
+
+    Username: student1
+    Email: student1@example.com
+    Password: aabc@123a
+    ```
+    
+    ```bash
+    # Example using default credentials (admin/adminpass, instructor1/instrpass, student1/studpass)
+    docker-compose exec web python /app/scripts/create_initial_users.py
+
+    # Example setting environment variables (Bash/Zsh) - only affects this one command
+    # docker-compose exec \
+    #   -e DJANGO_SUPERUSER_PASSWORD=supersecret \
+    #   -e DEFAULT_INSTRUCTOR_PASSWORD=instrsecret \
+    #   -e DEFAULT_STUDENT_PASSWORD=studsecret \
+    #   web python /app/scripts/create_initial_users.py
+    ```
+    *   Default Superuser: `admin` / `adminpass`
+    *   Default Instructor: `instructor1` / `instrpass`
+    *   Default Student: `student1` / `studpass`
+    *(Remember to change these default passwords if using in a non-development context!)*
+
+3.  **Populate Sample Courses (Optional):**
+    Requires the instructor user created in the previous step (or another existing instructor).
+    ```bash
+    # Using the default instructor1 user created by the previous script
+    docker-compose exec web python /app/scripts/populate_courses.py
+
+    # If you used a different instructor username/password:
+    # docker-compose exec \
+    #   -e POPULATE_INSTRUCTOR_USER=your_instructor_username \
+    #   -e POPULATE_INSTRUCTOR_PASS=your_instructor_password \
+    #   web python /app/scripts/populate_courses.py
+    ```
+
+## Create Superuser (Manual Alternative)
+
+If you prefer not to use the `create_initial_users.py` script, you can create an administrative user manually:
 ```bash
-# Execute the createsuperuser command inside the 'web' container
 docker-compose exec web python manage.py createsuperuser
 ```
-
 Follow the prompts. Example credentials:
-
 *   Username: `admin`
 *   Email: `admin@example.com`
 *   Password: `yoursecurepassword` (choose a strong one)
 
-You can bypass password validation if needed during development by answering 'y'.
+You will then need to create instructor/student users via the API or Django admin if you want to use the `populate_courses.py` script or test different roles.
+
+## Populating Sample Data
+
+This project includes a Python script to populate the database with sample courses using the API.
+
+**Prerequisites:**
+
+1.  The application containers must be running (`docker-compose up -d`).
+2.  An instructor user must exist in the database. You can create one using the registration API (`POST /api/register/` with role="instructor") or via the Django admin interface after creating a superuser. By default, the script uses `instructor1` / `ny990107`.
+
+**Running the Script:**
+
+1.  **(Optional) Set Environment Variables:** You can override the default instructor credentials and number of courses by setting environment variables before running the command:
+    ```bash
+    export POPULATE_INSTRUCTOR_USER=your_instructor_username
+    export POPULATE_INSTRUCTOR_PASS=your_instructor_password
+    export POPULATE_NUM_COURSES=50
+    ```
+
+2.  **Rebuild the Image (if you changed `Dockerfile` or `requirements.txt`):**
+    ```bash
+    docker-compose build web
+    ```
+
+3.  **Execute the script:** Run the following command from the directory containing `docker-compose.yml`:
+    ```bash
+    docker-compose exec web python /app/scripts/populate_courses.py
+    ```
+    *(Note: If you set environment variables, they need to be passed to the `exec` command if they aren't already part of the container's environment. Simpler is often to modify the script defaults or rely on the `.env` file if you integrate it there.)*
+
+    The script will attempt to log in as the instructor, and then create the specified number of courses, uploading the sample image for each. It includes a short wait at the beginning to allow the web service to fully initialize.
+
+**Troubleshooting:**
+
+*   **Connection Errors:** Ensure `docker-compose up -d` is running and the `web` service started successfully (`docker-compose logs web`). Check the `BASE_URL` in the script points to `http://web:8000`.
+*   **Login Failed (401/400):** Verify the instructor username and password are correct and the user exists in the database. Check the script's `INSTRUCTOR_USER`/`INSTRUCTOR_PASS` or the environment variables.
+*   **Image Not Found:** Ensure `COPY ./test_assets /app/test_assets` is in the `Dockerfile` and the image was rebuilt. Check the `IMAGE_PATH` in the script points to `/app/test_assets/sample_course.png`.
+*   **Permission Denied (403 on Course Creation):** Ensure the user specified (`instructor1` by default) actually has the `instructor` role assigned via their profile.
 
 ## Accessing the Application & API
 
