@@ -1,5 +1,15 @@
 # Course Management App Backend (MVP)
 
+<p align="center">
+  <img src="./assets/cma.png" alt="ChatGPT Reverse Logo" width="600"/>
+</p>
+
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"/></a>
+  <a href="https://semver.org"><img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version"/></a>
+</p>
+
+
 This is the backend service for the Course Management Application (MVP version), built with Django and Django REST Framework. It provides APIs for managing users (Admin, Instructor, User), courses, and enrollments according to defined roles and permissions.
 
 ## Features (MVP)
