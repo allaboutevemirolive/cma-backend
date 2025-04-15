@@ -100,6 +100,34 @@ Follow the prompts. Example credentials:
 
 You can bypass password validation if needed during development by answering 'y'.
 
+
+## Create Instructor
+
+Go to `http://localhost:8000/swagger/`.
+
+Register new instructor with this information, then wait for response code `201`.
+
+```txt
+{
+  "username": "instructor1",
+  "email": "instructor1@example.com",
+  "password": "aabc@123a",
+  "password2": "aabc@123a",
+  "first_name": "instructor",
+  "last_name": "1",
+  "role": "instructor"
+}
+```
+
+## Populate Database
+
+Run this script only after you create `instructor1`:
+
+```sh
+pip install requests
+python scripts/create_courses.py
+```
+
 ## Accessing the Application & API
 
 *   **Django Admin:** `http://localhost:8000/admin/` (Log in with the superuser credentials)
