@@ -49,6 +49,8 @@ This is the backend service for the Course Management Application (MVP version),
     ```
     **Important:** For production, set `DEBUG=False`, generate a strong `SECRET_KEY`, and list your actual domain(s) in `ALLOWED_HOSTS`.
 
+    Or you can rename filename from `example.env` to `.env` at the root project.
+
 3.  **Build and Start Services:**
     Use Docker Compose to build the image and start the database (`db`) and web application (`web`) containers.
 
@@ -116,6 +118,24 @@ Register new instructor with this information, then wait for response code `201`
   "first_name": "instructor",
   "last_name": "1",
   "role": "instructor"
+}
+```
+
+## Create Student
+
+Go to `http://localhost:8000/swagger/`.
+
+Register new student with this information, then wait for response code `201`.
+
+```txt
+{
+  "username": "student1",
+  "email": "student1@example.com",
+  "password": "aabc@123a",
+  "password2": "aabc@123a",
+  "first_name": "student",
+  "last_name": "1",
+  "role": "student"
 }
 ```
 
