@@ -288,17 +288,6 @@ Create a SQL file containing the `CREATE TABLE` statements for the current schem
 docker-compose exec -T db pg_dump --schema-only -U course_user -d course_db > schema_dump.sql
 ```
 
-## Stopping the Application
-
-```sh
-# Stop and remove the containers, network, and volumes defined in docker-compose.yml
-docker-compose down
-
-# To stop without removing volumes (useful for preserving DB data):
-# docker-compose stop
-```
-
-
 ## Clean Persistent
 
 ```sh
@@ -308,3 +297,34 @@ docker-compose down
 # Remove the custom built image
 docker image rm cma-backend-web
 ```
+
+## Clean All Active Docker Images (Warning)
+
+1. **Stop all running containers**:
+   ```bash
+   docker stop $(docker ps -q)
+   ```
+
+2. **Remove all containers**:
+   ```bash
+   docker rm $(docker ps -aq)
+   ```
+
+3. **Now remove all images**:
+   ```bash
+   docker rmi $(docker images -q)
+   ```
+
+## Clean All Active/Inactive Docker Images (Warning)
+
+```bash
+docker system prune -a --volumes
+```
+
+- This will remove **all**:
+  - stopped containers
+  - unused networks
+  - dangling images
+  - unused volumes
+
+> ⚠️ Be careful with this. It will free up a lot of space but also delete **everything not in use**.
